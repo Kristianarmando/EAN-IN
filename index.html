@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Escala de autoevaluación del nivel de conocimiento en habilidades de investigación científica (EAN-IN)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Librería para generar PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f4f6fb; color: #222; }
+    .app-container { display: flex; min-height: 100vh; }
+    .sidebar { width: 310px; background: #111827; color: #e5e7eb; padding: 20px 18px; display: flex; flex-direction: column; gap: 16px; }
+    .sidebar h1 { font-size: 1.1rem; margin: 0 0 6px; color: #f9fafb; }
+    .sidebar small { color: #9ca3af; display: block; margin-bottom: 4px; }
+    .credits { font-size: 0.8rem; line-height: 1.3; color: #d1d5db; }
+    .credits strong { color: #f9fafb; }
+    .credits a { color: #60a5fa; text-decoration: none; }
+    .credits a:hover { text-decoration: underline; }
+    .section-tabs-title { margin-top: 10px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; }
+    .section-tabs { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .tab-button { padding: 8px 10px; font-size: 0.85rem; border-radius: 6px; border: 1px solid rgba(156, 163, 175, 0.5); background: #111827; color: #e5e7eb; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s ease-in-out; }
+    .tab-button:hover { border-color: #60a5fa; background: #1f2937; }
+    .tab-button.active { border-color: #3b82f6; background: #1d4ed8; color: #f9fafb; box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6); }
+    .tab-button.completed { background: #047857; border-color: #10b981; color: #ecfdf5; }
+    .tab-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 999px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.7); }
+    .tab-button.completed .tab-badge { background: rgba(16, 185, 129, 0.2); border-color: rgba(187, 247, 208, 0.9); }
+    .main { flex: 1; padding: 20px 26px; overflow-y: auto; }
+    .instructions { margin-bottom: 12px; }
+    .instructions h2 { margin: 0 0 4px; font-size: 1.05rem; }
+    .instructions p { margin: 2px 0; font-size: 0.9rem; }
+    .options-list { margin: 4px 0 0 18px; font-size: 0.9rem; }
+    .section-title-main { font-size: 1rem; font-weight: 600; margin: 14px 0 10px; color: #111827; display: none; }
+    .items-grid { display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .item-card { background: #ffffff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 10px 10px 8px; font-size: 0.9rem; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); transition: all 0.15s ease-in-out; }
+    .item-card.answered { background: #ecfdf3; border-color: #22c55e; box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4); }
+    .item-card.missing { border-color: #f97373; background: #fef2f2; box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5); }
+    .item-label { margin-bottom: 4px; }
+    .item-label span { font-weight: 600; color: #111827; }
+    select.item-select { width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 0.85rem; background-color: #f9fafb; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+    select.item-select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5); background-color: #ffffff; }
+    .actions { margin-top: 8px; display: none; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-start; }
+    .primary-btn { padding: 8px 16px; border-radius: 999px; border: none; background: #1d4ed8; color: #f9fafb; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.35); transition: all 0.15s ease-in-out; }
+    .primary-btn:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.42); }
+    .primary-btn:active { transform: translateY(0); box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25); }
+    .missing-msg { font-size: 0.85rem; color: #b91c1c; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; padding: 8px 10px; max-width: 640px; margin-top: 6px; display: none; }
+    .results-panel { margin-top: 16px; background: #ffffff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 12px 12px 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); display: none; }
+    .results-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 4px; }
+    .results-table th, .results-table td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; }
+    .results-table th { background: #f3f4f6; }
+    .global-result { margin-top: 8px; font-size: 0.9rem; padding: 8px 10px; border-radius: 8px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .global-level-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-left: 6px; background: #1d4ed8; color: #eff6ff; }
+    .id-box { margin-top: 10px; font-size: 0.9rem; padding: 8px 10px; border-radius: 8px; background: #ecfeff; border: 1px solid #22d3ee; color: #0f172a; display: none; }
+    .id-box strong { font-weight: 600; }
+    .sd-field { margin-bottom: 12px; padding: 4px 0; border-radius: 8px; }
+    .sd-field.sd-missing strong { color: #b91c1c; }
+    .sd-field.sd-missing .item-select { border-color: #f97373; background: #fef2f2; box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5); }
+    .sd-field.sd-answered { background: #ecfdf3; border: 1px solid #22c55e; box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3); }
+    .sd-field.sd-answered strong { color: #166534; }
+    .consent-wrapper { margin-top: 12px; font-size: 0.9rem; padding: 6px 8px; border-radius: 8px; transition: all 0.15s ease-in-out; }
+    .consent-wrapper.consent-error { border: 1px solid #f97373; background: #fef2f2; box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.5); }
+    .consent-wrapper.consent-error label { color: #b91c1c; font-weight: 600; }
+    @media (max-width: 900px) { .app-container { flex-direction: column; } .sidebar { width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <h1>Escala de autoevaluación del nivel de conocimiento en habilidades de investigación científica (EAN-IN)</h1>
+        <small>Instrumento de autoevaluación</small>
+      </div>
+      <div class="credits">
+        <strong>Desarrollada por:</strong><br /><br />
+        <strong>Dr. Kristian Armando Pineda Castillo</strong><br />
+        Universidad Pedagógica del Estado de Sinaloa<br />
+        ORCID: <a href="https://orcid.org/0000-0002-4686-3587" target="_blank">0000-0002-4686-3587</a><br /><br />
+        <strong>Dra. Virginia Macíaz Ayón</strong><br />
+        Universidad Pedagógica del Estado de Sinaloa<br />
+        ORCID: <a href="https://orcid.org/0009-0006-8915-9721" target="_blank">0009-0006-8915-9721</a><br /><br />
+        <strong>Dra. Esmeralda Sánchez Navarro</strong><br />
+        Universidad Pedagógica del Estado de Sinaloa<br />
+        ORCID: <a href="https://orcid.org/0000-0002-8812-2189" target="_blank">0000-0002-8812-2189</a>
+      </div>
+      <div id="nav-container" style="display:none;">
+        <div class="section-tabs-title">Dimensiones</div>
+        <div class="section-tabs" id="section-tabs"></div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- 1) PANTALLA DE PRESENTACIÓN (INTRO + CONSENTIMIENTO) -->
+      <div id="presentation-screen">
+        <div class="instructions" id="intro-block">
+          <h2>Presentación de la EAN-IN</h2>
+          <p>
+            La <strong>Escala de Autoevaluación del Nivel de Conocimiento en Habilidades de Investigación Científica (EAN-IN)</strong>
+            es un instrumento de autoevaluación que tiene el fin de medir el nivel de conocimiento de habilidades sobre la
+            investigación científica en estudiantes universitarios.
+          </p>
+          <p>
+            Evalúa habilidades relacionadas con el planteamiento del problema, la revisión de la literatura, la metodología,
+            el método, los resultados, la discusión, las conclusiones y la comunicación científica.
+          </p>
+          <p><strong>¿A quién está dirigida la EAN-IN?</strong></p>
+          <p>
+            La EAN-IN está dirigida a <strong>estudiantes universitarios de pregrado y posgrado</strong> que participan en procesos
+            de formación en investigación científica.
+          </p>
+          <button id="go-consent-btn" class="primary-btn" style="margin-top: 10px;">
+            Leer consentimiento informado
+          </button>
+        </div>
+
+        <!-- Consentimiento informado -->
+        <div id="consent-block" style="display:none; background:#ffffff; padding:16px; border-radius:12px; border:1px solid #e5e7eb; margin-top:12px;">
+          <h2>Consentimiento informado</h2>
+          <p>
+            El siguiente instrumento de autoevaluación es parte de una investigación educativa registrada ante la
+            <strong>Secretaría de Ciencia, Humanidades, Tecnología e Innovación</strong> (Folio <strong>IH-2025-I-407</strong>)
+            por parte de la <strong>Universidad Pedagógica del Estado de Sinaloa</strong>.
+          </p>
+          <p>
+            El objetivo del cuestionario es contribuir a diagnosticar el nivel de conocimiento preliminar de los estudiantes
+            sobre diseños de investigación educativa y redacción científica. Su participación en esta investigación permitirá
+            contribuir al proceso de calidad en la formación universitaria, así como a la toma de decisiones académicas y científicas.
+          </p>
+          <p>
+            No se ha detectado ningún riesgo que implique esta investigación; sin embargo, si no se siente cómodo proporcionando
+            alguna información, tiene la libertad de abandonar la investigación antes de finalizar la contestación del instrumento,
+            sin que esto le afecte en lo absoluto.
+          </p>
+          <p>
+            La contestación de este instrumento de autoevaluación es una actividad meramente <strong>voluntaria y anónima</strong>,
+            de modo que no se solicita su nombre. La información recolectada se utilizará para la mejora de la calidad educativa
+            universitaria y el desarrollo del proyecto de investigación, así como para la diseminación de resultados en congresos,
+            simposios, coloquios u otros medios de publicación, divulgación o difusión académica o científica.
+          </p>
+          <p>
+            Lo único que se le pide es contestar con honestidad de acuerdo con sus conocimientos. Si está de acuerdo en continuar,
+            conteste las preguntas; de lo contrario, puede abandonar este proceso sin ninguna consecuencia académica o personal.
+          </p>
+          <p><strong>Datos del proyecto</strong></p>
+          <p><strong>Investigador responsable:</strong> Dr. Kristian Armando Pineda Castillo</p>
+          <p><strong>Título del proyecto:</strong> Uso de material multimedia en formato de video para potenciar el aprendizaje
+            científico universitario: el aprendizaje de la investigación educativa y la redacción científica.</p>
+          <p><strong>Folio:</strong> IH-2025-I-407</p>
+          <p>
+            <strong>Objetivo general del proyecto:</strong> Describir la forma en que el uso de material multimedia en formato
+            de video impacta en el proceso de aprendizaje de la investigación educativa y la redacción científica en el contexto
+            universitario de la Universidad Pedagógica del Estado de Sinaloa.
+          </p>
+          <p><strong>Contacto:</strong> kristian.pineda@upes.edu.mx</p>
+
+          <button id="download-consent-btn" class="primary-btn" type="button">
+            Descargar consentimiento informado (PDF)
+          </button>
+
+          <div id="consent-wrapper" class="consent-wrapper">
+            <label>
+              <input type="checkbox" id="consent-checkbox" />
+              He leído y comprendido la información anterior. Acepto participar voluntariamente en este estudio, entendiendo
+              que mi participación es confidencial y puedo retirarme en cualquier momento sin consecuencias.
+            </label>
+          </div>
+
+          <!-- Mensaje de error rojo -->
+          <div id="consent-error-msg" class="missing-msg" style="display: none; margin-top: 12px;">
+            Debes marcar la casilla de consentimiento informado para continuar.
+          </div>
+
+          <button id="accept-consent-btn" class="primary-btn" style="margin-top:10px;">
+            Continuar a instrucciones
+          </button>
+        </div>
+      </div>
+
+      <!-- 2) PANTALLA DE INSTRUCCIONES -->
+      <div id="instructions-screen" style="display:none;">
+        <div class="instructions">
+          <h2>Instrucciones</h2>
+          <p>Este instrumento de autoevaluación valora tu nivel de conocimiento del proceso de investigación.</p>
+          <p>No hay respuestas ‘buenas o malas’; responde con honestidad según consideres tu nivel de conocimiento actual.</p>
+          <p><strong>Opciones de respuesta:</strong></p>
+          <ul class="options-list">
+            <li>1 = No conozco del tema.</li>
+            <li>2 = Conozco poco del tema.</li>
+            <li>3 = Tengo conocimiento suficiente del tema.</li>
+            <li>4 = Manejo el tema con seguridad.</li>
+            <li>5 = Domino el tema ampliamente.</li>
+          </ul>
+          <button id="presentation-start-btn" class="primary-btn" style="margin-top: 10px;">
+            Ir a datos generales
+          </button>
+        </div>
+      </div>
+
+      <!-- 3) BLOQUE SOCIODEMOGRÁFICO -->
+      <div id="sociodemo-screen" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+        <h2>Datos generales</h2>
+        <p>Los siguientes datos se solicitan únicamente para realizar análisis comparativos entre grupos. Tu información es completamente confidencial.</p>
+        <div class="sd-field" id="sd-field-sex">
+          <label><strong>Sexo:</strong></label>
+          <select id="sd-sex" class="item-select">
+            <option value="">Seleccione…</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+            <option value="No binario">No binario</option>
+            <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+          </select>
+        </div>
+        <div class="sd-field" id="sd-field-age">
+          <label><strong>Edad:</strong></label>
+          <select id="sd-age" class="item-select">
+            <option value="">Seleccione…</option>
+          </select>
+        </div>
+        <div class="sd-field" id="sd-field-level">
+          <label><strong>Nivel educativo en curso:</strong></label>
+          <select id="sd-level" class="item-select">
+            <option value="">Seleccione…</option>
+            <option value="Licenciatura">Estudiante de Licenciatura</option>
+            <option value="Maestría">Estudiante de Maestría</option>
+            <option value="Doctorado">Estudiante de Doctorado</option>
+            <option value="Posdoctorado">En estancia posdoctoral</option>
+          </select>
+        </div>
+        <div class="sd-field" id="sd-field-semester">
+          <label><strong>Semestre:</strong></label>
+          <select id="sd-semester" class="item-select">
+            <option value="">Seleccione…</option>
+            <option value="1">Primer semestre</option>
+            <option value="2">Segundo semestre</option>
+            <option value="3">Tercer semestre</option>
+            <option value="4">Cuarto semestre</option>
+            <option value="5">Quinto semestre</option>
+            <option value="6">Sexto semestre</option>
+            <option value="7">Séptimo semestre</option>
+            <option value="8">Octavo semestre</option>
+            <option value="9">Noveno semestre</option>
+            <option value="10">Décimo semestre</option>
+          </select>
+        </div>
+        <button id="start-survey-btn" style="padding: 10px 16px; background: #1d4ed8; color: white; border-radius: 8px; cursor: pointer; border: none;">
+          Iniciar cuestionario
+        </button>
+      </div>
+
+      <h2 class="section-title-main" id="current-section-title"></h2>
+      <div id="items-container" class="items-grid"></div>
+
+      <!-- Barra de navegación principal (durante el cuestionario) -->
+      <div class="actions">
+        <button id="next-section-btn" class="primary-btn">Siguiente sección</button>
+        <button id="results-btn" class="primary-btn" style="display:none;">Ver resultados</button>
+        <div id="missing-msg" class="missing-msg"></div>
+      </div>
+
+      <!-- NUEVA PANTALLA FINAL -->
+      <div id="final-screen" style="display:none; margin-top:20px;">
+        <div class="instructions" style="background:#ecfdf3; border:1px solid #22c55e; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+          <h2 style="margin-top:0;">
+            Has finalizado la contestación de la Escala de autoevaluación del nivel de conocimiento en habilidades de investigación científica (EAN-IN)
+          </h2>
+          <p>
+            Muchas gracias por tu participación. A continuación se muestran tus resultados y tendrás la opción de descargarlos en PDF.
+          </p>
+        </div>
+
+        <div id="id-box" class="id-box">
+          Tu ID de participante es: <strong id="respondent-id"></strong>. Te sugerimos guardarlo para los fines académicos o personales que consideres pertinentes.
+        </div>
+
+        <div class="results-panel">
+          <h3>Resultados por dimensión</h3>
+          <table class="results-table" id="results-table">
+            <thead>
+              <tr>
+                <th>Sección</th>
+                <th>Promedio</th>
+                <th>Nivel</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div id="global-result" class="global-result">
+            Responde todos los ítems y pulsa <strong>“Ver resultados”</strong> para ver tu resultado global.
+          </div>
+        </div>
+
+        <div class="actions" style="display:flex; margin-top:10px;">
+          <button id="pdf-btn" class="primary-btn" style="display:none;">Descargar PDF</button>
+          <button id="go-home-btn" class="primary-btn" type="button">Volver a la página principal</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /* =====================================
+       0. CONFIGURACIÓN BÁSICA
+       ===================================== */
+    const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyrd2Wbf8zTeokuGOanyQbo2zNWpxqdqLislnSMoGX10UNG56fGmDBQmnPKdHBoXniA/exec";
+    const respondentId = "EAN-" + Date.now().toString(36).toUpperCase();
+    const savedResponses = {};
+    const sociodemo = { sex: "", age: "", level: "", semester: "" };
+    let currentSectionIndex = 0;
+    let currentView = "presentation";
+    let lastResults = null;
+    let consentAccepted = false;
+    let resultsSent = false; // para evitar envíos duplicados
+    let surveyLocked = false; // NUEVO: para bloquear navegación tras finalizar
+
+    function range(start, end) {
+      const arr = [];
+      for (let i = start; i <= end; i++) arr.push(i);
+      return arr;
+    }
+
+    const sections = [
+      { id: "planteamiento", name: "Planteamiento del problema", items: range(1, 8) },
+      { id: "revision", name: "Revisión de la literatura", items: range(9, 15) },
+      { id: "metodologia", name: "Metodología", items: range(16, 36) },
+      { id: "metodo", name: "Método", items: range(37, 50) },
+      { id: "resultados", name: "Resultados", items: range(51, 59) },
+      { id: "discusion", name: "Discusión", items: range(60, 65) },
+      { id: "conclusiones", name: "Conclusiones", items: range(66, 70) },
+      { id: "comunicacion", name: "Comunicación científica", items: range(71, 80) }
+    ];
+
+    const itemText = {
+      1: "Sé identificar un problema de investigación.",
+      2: "Conozco cómo contextualizar un objeto de estudio con apoyo de antecedentes teóricos y/o estadísticos.",
+      3: "Sé establecer la delimitación temporal, geográfica, conceptual y disciplinar de un objeto de estudio.",
+      4: "Conozco cómo justificar la importancia de un objeto de estudio.",
+      5: "Sé fundamentar la viabilidad de un estudio.",
+      6: "Sé plantear preguntas de investigación.",
+      7: "Sé desarrollar objetivos de investigación.",
+      8: "Conozco cómo definir hipótesis o supuestos de investigación.",
+      9: "Sé realizar una revisión de la literatura en fuentes confiables.",
+      10: "Conozco cómo desarrollar un marco teórico.",
+      11: "Sé realizar una discusión epistemológica.",
+      12: "Sé elaborar la evolución histórica de un objeto de estudio.",
+      13: "Sé desarrollar el estado del arte explorando estudios a nivel local, nacional e internacional.",
+      14: "Conozco cómo identificar vacíos del conocimiento de un objeto de estudio.",
+      15: "Sé identificar vacíos metodológicos de un objeto de estudio.",
+      16: "Sé fundamentar el enfoque metodológico según los objetivos y preguntas de investigación.",
+      17: "Conozco cómo determinar el alcance de la investigación.",
+      18: "Conozco cómo definir los límites metodológicos de la investigación.",
+      19: "Sé describir el método o diseño a desarrollar en un estudio.",
+      20: "Sé definir la muestra o participantes.",
+      21: "Sé justificar el método de muestreo o selección de participantes.",
+      22: "Sé definir los criterios de inclusión de la muestra o participantes.",
+      23: "Conozco cómo describir el escenario de investigación.",
+      24: "Conozco las diferentes técnicas de investigación cualitativa.",
+      25: "Conozco las diferentes técnicas de investigación cuantitativa.",
+      26: "Sé elegir instrumentos existentes para una investigación.",
+      27: "Conozco cómo adaptar un instrumento de investigación.",
+      28: "Sé desarrollar instrumentos de recolección de datos.",
+      29: "Conozco procedimientos psicométricos para validar instrumentos.",
+      30: "Sé detallar el procedimiento (tiempos, recursos, recolección de datos).",
+      31: "Sé detallar los pasos para el análisis de los datos.",
+      32: "Conozco distintas formas de analizar datos cualitativos y/o cuantitativos.",
+      33: "Sé reportar el uso de software que se podría utilizar para el análisis de datos.",
+      34: "Conozco cómo aplicar la ética investigativa.",
+      35: "Conozco los aspectos éticos de un consentimiento informado.",
+      36: "Sé asegurar rigor a una investigación con estrategias de validez.",
+      37: "Conozco el diseño de investigación-acción y sus variantes.",
+      38: "Conozco el diseño de teoría fundamentada y sus variantes.",
+      39: "Conozco el diseño de etnografía y sus variantes.",
+      40: "Conozco el diseño de fenomenología y sus variantes.",
+      41: "Conozco el diseño de estudio de caso y sus variantes.",
+      42: "Conozco el diseño narrativo.",
+      43: "Conozco el diseño de investigación documental.",
+      44: "Conozco el diseño de revisión sistemática.",
+      45: "Conozco el diseño de metaanálisis.",
+      46: "Conozco el diseño experimental.",
+      47: "Conozco el diseño no experimental (encuesta, correlacional y descriptivo).",
+      48: "Conozco el diseño cuasiexperimental.",
+      49: "Conozco el diseño preexperimental.",
+      50: "Conozco el diseño factorial.",
+      51: "Conozco cómo reflejar un enfoque metodológico aplicado.",
+      52: "Sé reflejar en los resultados un método o diseño empleado.",
+      53: "Conozco cómo presentar evidencia de técnicas e instrumentos aplicados.",
+      54: "Sé presentar evidencia de validación de instrumentos.",
+      55: "Conozco cómo interpretar datos de instrumentos aplicados.",
+      56: "Sé reflejar el logro de objetivos.",
+      57: "Sé presentar evidencia de los datos recolectados.",
+      58: "Sé utilizar apoyos visuales (como tablas, gráficas, imágenes o diagramas) para presentar resultados.",
+      59: "Conozco cómo documentar evidencia de software utilizado.",
+      60: "Sé contrastar hallazgos empíricos con los de otros estudios.",
+      61: "Conozco cómo dar cuenta de las limitaciones de una investigación.",
+      62: "Sé contrastar los resultados a la luz de la teoría.",
+      63: "Conozco cómo presentar posibles sesgos de un estudio.",
+      64: "Sé presentar implicaciones de resultados.",
+      65: "Conozco cómo sugerir futuras líneas de investigación.",
+      66: "Sé presentar conclusiones del estudio.",
+      67: "Conozco cómo reflexionar sobre los resultados alcanzados.",
+      68: "Conozco cómo retomar el alcance de objetivos.",
+      69: "Sé sintetizar el estudio.",
+      70: "Conozco cómo realizar recomendaciones generales.",
+      71: "Sé redactar un reporte de investigación en algún formato: tesis, artículo, capítulo de libro, entre otros.",
+      72: "Conozco oportunidades para la difusión de resultados de investigación en espacios académicos (simposios, congresos, coloquios, entre otros).",
+      73: "Conozco cómo elaborar materiales de apoyo (presentaciones digitales, pósteres, resúmenes gráficos, infografías).",
+      74: "Sé aplicar criterios de claridad y coherencia en la comunicación científica.",
+      75: "Conozco oportunidades para la divulgación científica (revistas y medios de divulgación, repositorios y plataformas para público general).",
+      76: "Sé dar crédito a autores por sus ideas.",
+      77: "Conozco cómo citar obras de autores y diferentes fuentes documentales.",
+      78: "Sé gestionar citas de acuerdo con un estilo (APA, Chicago, Vancouver).",
+      79: "Sé elaborar la referencia de obras de autores y diferentes fuentes documentales.",
+      80: "Sé gestionar referencias según el estilo solicitado (APA, Chicago, Vancouver, entre otros)."
+    };
+
+    const itemToSection = {};
+    sections.forEach(sec => sec.items.forEach(i => { itemToSection[i] = sec; }));
+
+    const tabsContainer = document.getElementById("section-tabs");
+    const navContainer = document.getElementById("nav-container");
+    const itemsContainer = document.getElementById("items-container");
+    const currentSectionTitle = document.getElementById("current-section-title");
+    const missingMsg = document.getElementById("missing-msg");
+    const nextBtn = document.getElementById("next-section-btn");
+    const resultsBtn = document.getElementById("results-btn");
+    const pdfBtn = document.getElementById("pdf-btn");
+    const idBox = document.getElementById("id-box");
+    const respondentIdSpan = document.getElementById("respondent-id");
+    const resultsPanel = document.querySelector(".results-panel");
+    const actionsBar = document.querySelector(".actions"); // la primera barra de acciones
+    const finalScreen = document.getElementById("final-screen");
+    const goHomeBtn = document.getElementById("go-home-btn");
+
+    const presentationScreen = document.getElementById("presentation-screen");
+    const instructionsScreen = document.getElementById("instructions-screen");
+    const sociodemoScreen = document.getElementById("sociodemo-screen");
+    const introBlock = document.getElementById("intro-block");
+    const consentBlock = document.getElementById("consent-block");
+    const goConsentBtn = document.getElementById("go-consent-btn");
+    const downloadConsentBtn = document.getElementById("download-consent-btn");
+    const consentCheckbox = document.getElementById("consent-checkbox");
+    const acceptConsentBtn = document.getElementById("accept-consent-btn");
+    const consentWrapper = document.getElementById("consent-wrapper");
+    const consentErrorMsg = document.getElementById("consent-error-msg");
+
+    // Tabs
+    const presentationTabBtn = document.createElement("button");
+    presentationTabBtn.className = "tab-button active";
+    presentationTabBtn.id = "tab-presentation";
+    presentationTabBtn.innerHTML = `<span>Presentación</span><span class="tab-badge" id="badge-presentation">Info</span>`;
+    presentationTabBtn.addEventListener("click", onPresentationTabClick);
+    tabsContainer.appendChild(presentationTabBtn);
+
+    const instructionsTabBtn = document.createElement("button");
+    instructionsTabBtn.className = "tab-button";
+    instructionsTabBtn.id = "tab-instructions";
+    instructionsTabBtn.innerHTML = `<span>Instrucciones</span><span class="tab-badge" id="badge-instructions">Guía</span>`;
+    instructionsTabBtn.addEventListener("click", onInstructionsTabClick);
+    tabsContainer.appendChild(instructionsTabBtn);
+
+    const socioTabBtn = document.createElement("button");
+    socioTabBtn.className = "tab-button";
+    socioTabBtn.id = "tab-socio";
+    socioTabBtn.innerHTML = `<span>Datos generales</span><span class="tab-badge" id="badge-socio">DG</span>`;
+    socioTabBtn.addEventListener("click", onSociodemoTabClick);
+    tabsContainer.appendChild(socioTabBtn);
+
+    sections.forEach((sec, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "tab-button";
+      btn.dataset.index = idx;
+      btn.innerHTML = `<span>${sec.name}</span><span class="tab-badge" id="badge-${sec.id}">${sec.items[0]}–${sec.items[sec.items.length - 1]}</span>`;
+      btn.addEventListener("click", () => onTabClick(idx));
+      tabsContainer.appendChild(btn);
+    });
+
+    // Edades
+    const ageSelect = document.getElementById("sd-age");
+    for (let i = 18; i <= 100; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i + " años";
+      ageSelect.appendChild(opt);
+    }
+
+    // Marcar campos sociodemográficos como respondidos
+    ["sex", "age", "level", "semester"].forEach(name => {
+      const sel = document.getElementById("sd-" + name);
+      const fieldDiv = document.getElementById("sd-field-" + name);
+      if (!sel || !fieldDiv) return;
+      sel.addEventListener("change", () => {
+        if (sel.value) {
+          fieldDiv.classList.remove("sd-missing");
+          fieldDiv.classList.add("sd-answered");
+        } else {
+          fieldDiv.classList.remove("sd-answered");
+        }
+      });
+    });
+
+    /* =====================================
+       2a. LÓGICA DE PRESENTACIÓN / CONSENTIMIENTO
+       ===================================== */
+    if (goConsentBtn) {
+      goConsentBtn.addEventListener("click", () => {
+        introBlock.style.display = "none";
+        consentBlock.style.display = "block";
+      });
+    }
+
+    if (consentCheckbox && acceptConsentBtn) {
+      consentCheckbox.addEventListener("change", () => {
+        if (consentCheckbox.checked) {
+          consentWrapper.classList.remove("consent-error");
+          if (consentErrorMsg) consentErrorMsg.style.display = "none";
+        }
+      });
+
+      acceptConsentBtn.addEventListener("click", () => {
+        if (!consentCheckbox.checked) {
+          consentWrapper.classList.add("consent-error");
+          if (consentErrorMsg) consentErrorMsg.style.display = "block";
+          return;
+        }
+
+        consentWrapper.classList.remove("consent-error");
+        if (consentErrorMsg) consentErrorMsg.style.display = "none";
+
+        consentAccepted = true;
+        presentationScreen.style.display = "none";
+        instructionsScreen.style.display = "block";
+        currentView = "instructions";
+
+        document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+        instructionsTabBtn.classList.add("active");
+      });
+    }
+
+    function onPresentationTabClick() {
+      if (surveyLocked) return; // NUEVO: ya no se puede navegar
+      document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+      presentationTabBtn.classList.add("active");
+      currentView = "presentation";
+      presentationScreen.style.display = "block";
+      instructionsScreen.style.display = "none";
+      sociodemoScreen.style.display = "none";
+      currentSectionTitle.style.display = "none";
+      itemsContainer.style.display = "none";
+      actionsBar.style.display = "none";
+      resultsPanel.style.display = lastResults ? "block" : "none";
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+    }
+
+    function onInstructionsTabClick() {
+      if (surveyLocked) return; // NUEVO
+      if (!consentAccepted) {
+        consentWrapper.classList.add("consent-error");
+        if (consentErrorMsg) consentErrorMsg.style.display = "block";
+        alert("Primero debes aceptar el consentimiento informado en la pestaña 'Presentación'.");
+        onPresentationTabClick();
+        return;
+      }
+      document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+      instructionsTabBtn.classList.add("active");
+      currentView = "instructions";
+      presentationScreen.style.display = "none";
+      instructionsScreen.style.display = "block";
+      sociodemoScreen.style.display = "none";
+      currentSectionTitle.style.display = "none";
+      itemsContainer.style.display = "none";
+      actionsBar.style.display = "none";
+      resultsPanel.style.display = lastResults ? "block" : "none";
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+    }
+
+    function onSociodemoTabClick() {
+      if (surveyLocked) return; // NUEVO
+      document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+      socioTabBtn.classList.add("active");
+      currentView = "socio";
+      presentationScreen.style.display = "none";
+      instructionsScreen.style.display = "none";
+      sociodemoScreen.style.display = "block";
+      currentSectionTitle.style.display = "none";
+      itemsContainer.style.display = "none";
+      actionsBar.style.display = "none";
+      resultsPanel.style.display = lastResults ? "block" : "none";
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+    }
+
+    document.getElementById("presentation-start-btn").addEventListener("click", () => {
+      navContainer.style.display = "block";
+      onSociodemoTabClick();
+    });
+
+    document.getElementById("start-survey-btn").addEventListener("click", () => {
+      const sex = document.getElementById("sd-sex").value;
+      const age = document.getElementById("sd-age").value;
+      const level = document.getElementById("sd-level").value;
+      const semester = document.getElementById("sd-semester").value;
+
+      ["sex", "age", "level", "semester"].forEach(f => {
+        const fieldDiv = document.getElementById("sd-field-" + f);
+        if (fieldDiv) fieldDiv.classList.remove("sd-missing");
+      });
+
+      if (!sex) document.getElementById("sd-field-sex").classList.add("sd-missing");
+      if (!age) document.getElementById("sd-field-age").classList.add("sd-missing");
+      if (!level) document.getElementById("sd-field-level").classList.add("sd-missing");
+      if (!semester) document.getElementById("sd-field-semester").classList.add("sd-missing");
+
+      if (!sex || !age || !level || !semester) {
+        alert("Por favor completa todos los datos antes de continuar.");
+        return;
+      }
+
+      sociodemo.sex = sex;
+      sociodemo.age = age;
+      sociodemo.level = level;
+      sociodemo.semester = semester;
+
+      const badgeSocio = document.getElementById("badge-socio");
+      socioTabBtn.classList.add("completed");
+      if (badgeSocio) badgeSocio.textContent = "Completado";
+
+      // 🔹 OCULTAR PESTAÑAS DE INTRODUCCIÓN AL INICIAR LA ESCALA
+  presentationTabBtn.style.display  = "none";
+  instructionsTabBtn.style.display  = "none";
+  socioTabBtn.style.display         = "none";
+
+  navContainer.style.display = "block";
+  renderSection(0);
+});
+
+    /* =====================================
+       3. RENDER DE SECCIÓN
+       ===================================== */
+    function renderSection(index) {
+      const sec = sections[index];
+      currentSectionIndex = index;
+      currentView = "section";
+      presentationScreen.style.display = "none";
+      instructionsScreen.style.display = "none";
+      sociodemoScreen.style.display = "none";
+      currentSectionTitle.style.display = "block";
+      itemsContainer.style.display = "grid";
+      actionsBar.style.display = "flex";
+      resultsPanel.style.display = "block";
+      currentSectionTitle.textContent = sec.name;
+
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      const currentBtn = document.querySelector(`.tab-button[data-index="${index}"]`);
+      if (currentBtn) currentBtn.classList.add("active");
+
+      itemsContainer.innerHTML = "";
+      sec.items.forEach(itemNum => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+        card.id = `card-item-${itemNum}`;
+        const label = document.createElement("div");
+        label.className = "item-label";
+        label.innerHTML = `<span>${itemNum}.</span> ${itemText[itemNum] || ""}`;
+        const select = document.createElement("select");
+        select.className = "item-select";
+        select.id = `item-${itemNum}`;
+        select.innerHTML = `
+          <option value="">Seleccione una respuesta...</option>
+          <option value="1">1 = No conozco del tema.</option>
+          <option value="2">2 = Conozco poco del tema.</option>
+          <option value="3">3 = Tengo conocimiento suficiente del tema.</option>
+          <option value="4">4 = Manejo el tema con seguridad.</option>
+          <option value="5">5 = Domino el tema ampliamente.</option>
+        `;
+        if (savedResponses[itemNum]) {
+          select.value = savedResponses[itemNum];
+          card.classList.add("answered");
+        }
+        select.addEventListener("change", () => {
+          savedResponses[itemNum] = select.value;
+          if (select.value !== "") {
+            card.classList.add("answered");
+            card.classList.remove("missing");
+          } else {
+            card.classList.remove("answered");
+          }
+          updateSectionCompletionStatus(sec);
+        });
+        card.appendChild(label);
+        card.appendChild(select);
+        itemsContainer.appendChild(card);
+      });
+      updateNavigationButtons();
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+    }
+
+    function updateNavigationButtons() {
+      if (currentSectionIndex < sections.length - 1) {
+        nextBtn.style.display = "inline-flex";
+        resultsBtn.style.display = "none";
+      } else {
+        nextBtn.style.display = "none";
+        resultsBtn.style.display = "inline-flex";
+      }
+    }
+
+    /* =====================================
+       4. COMPLECIÓN / NAVEGACIÓN
+       ===================================== */
+    function isSectionComplete(sec) {
+      return sec.items.every(i => savedResponses[i] && savedResponses[i] !== "");
+    }
+
+    function updateSectionCompletionStatus(sec) {
+      const badge = document.getElementById(`badge-${sec.id}`);
+      const tabBtn = Array.from(document.querySelectorAll(".tab-button")).find(
+        b => Number(b.dataset.index) === sections.indexOf(sec)
+      );
+      if (isSectionComplete(sec)) {
+        if (tabBtn) tabBtn.classList.add("completed");
+        if (badge) badge.textContent = "Completada";
+      } else {
+        if (tabBtn) tabBtn.classList.remove("completed");
+        if (badge) badge.textContent = `${sec.items[0]}–${sec.items[sec.items.length - 1]}`;
+      }
+    }
+
+    function highlightMissingItems(missingItems) {
+      const currentSec = sections[currentSectionIndex];
+      currentSec.items.forEach(i => {
+        const card = document.getElementById(`card-item-${i}`);
+        if (card) card.classList.remove("missing");
+      });
+      missingItems.forEach(i => {
+        const card = document.getElementById(`card-item-${i}`);
+        if (card) card.classList.add("missing");
+      });
+      if (missingItems.length > 0) {
+        const firstCard = document.getElementById(`card-item-${missingItems[0]}`);
+        if (firstCard) firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function onTabClick(targetIndex) {
+      if (surveyLocked) return; // NUEVO
+      if (!sociodemo.sex || !sociodemo.age || !sociodemo.level || !sociodemo.semester) {
+        alert("Primero completa la sección 'Datos generales' y pulsa 'Iniciar cuestionario'.");
+        onSociodemoTabClick();
+        return;
+      }
+      if (currentView === "section" && targetIndex > currentSectionIndex && !isSectionComplete(sections[currentSectionIndex])) {
+        const missing = sections[currentSectionIndex].items.filter(i => !savedResponses[i] || savedResponses[i] === "");
+        highlightMissingItems(missing);
+        missingMsg.style.display = "block";
+        missingMsg.innerHTML = `<strong>No puedes avanzar porque faltan respuestas en esta sección.</strong><br><br><strong>Ítems faltantes:</strong> ${missing.join(", ")}`;
+        alert("No puedes avanzar porque faltan respuestas en esta sección.\n\nÍtems faltantes: " + missing.join(", "));
+        return;
+      }
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+      renderSection(targetIndex);
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const currentSec = sections[currentSectionIndex];
+      const missing = currentSec.items.filter(i => !savedResponses[i] || savedResponses[i] === "");
+      if (missing.length > 0) {
+        highlightMissingItems(missing);
+        missingMsg.style.display = "block";
+        missingMsg.innerHTML = `<strong>Faltan por responder los siguientes ítems de esta sección:</strong><br>${missing.join(", ")}`;
+        alert("Por favor, responde todas las preguntas de la sección actual antes de avanzar.\n\nÍtems faltantes: " + missing.join(", "));
+        return;
+      }
+      missingMsg.style.display = "none";
+      missingMsg.textContent = "";
+      if (currentSectionIndex < sections.length - 1) renderSection(currentSectionIndex + 1);
+    });
+
+    /* =====================================
+       5. NIVELES Y ENVÍO A SHEETS
+       ===================================== */
+    function levelFromAverage(avg) {
+      if (avg <= 1.00) return "Sin conocimientos básicos";
+      if (avg > 1.00 && avg < 2.00) return "Básico";
+      if (avg >= 2.00 && avg < 3.00) return "Intermedio";
+      if (avg >= 3.00 && avg < 4.00) return "Bueno";
+      return "Avanzado";
+    }
+
+    // NUEVO: mensaje interpretativo según el promedio global
+    function getGlobalDescription(avg) {
+      if (avg <= 1.00) {
+        return "El que usted se ubique en este nivel sugiere, de acuerdo con las respuestas que usted mismo dio, que no tiene conocimientos básicos de los temas de habilidades de investigación científica y reconoce que requiere apoyo significativo para desarrollarlos a detalle.";
+      } else if (avg > 1.00 && avg < 2.00) {
+        return "El que usted se ubique en este nivel sugiere, de acuerdo con las respuestas que usted mismo dio, que tiene conocimientos muy básicos de los temas de habilidades de investigación científica y reconoce que requiere apoyo significativo para desarrollarlos.";
+      } else if (avg >= 2.00 && avg < 3.00) {
+        return "El que usted se ubique en este nivel sugiere, de acuerdo con las respuestas que usted mismo dio, que conoce de los temas de habilidades de investigación científica y puede desarrollarlos adecuadamente, aunque reconoce limitaciones en puntos específicos.";
+      } else if (avg >= 3.00 && avg < 4.00) {
+        return "El que usted se ubique en este nivel sugiere, de acuerdo con las respuestas que usted mismo dio, que maneja los temas de habilidades de investigación científica con claridad y seguridad; puede desarrollarlos con solvencia, salvo aspectos muy puntuales.";
+      } else { // avg >= 4.00
+        return "El que usted se ubique en este nivel sugiere, de acuerdo con las respuestas que usted mismo dio, que domina ampliamente los temas de habilidades de investigación científica y puede desarrollarlos con profundidad, detalle y precisión.";
+      }
+    }
+
+    async function sendResponsesToSheet() {
+      const payload = {
+        responses: savedResponses,
+        meta: {
+          userAgent: navigator.userAgent,
+          respondentId: respondentId,
+          sex: sociodemo.sex,
+          age: sociodemo.age,
+          level: sociodemo.level,
+          semester: sociodemo.semester
+        }
+      };
+      try {
+        await fetch(ENDPOINT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.error("Error en fetch:", error);
+        alert("No fue posible enviar tus respuestas al servidor. Aunque puedes ver tus resultados, te sugerimos intentarlo de nuevo más tarde.");
+      }
+    }
+
+    /* =====================================
+       6. CÁLCULO DE RESULTADOS
+       ===================================== */
+    resultsBtn.addEventListener("click", async () => {
+  // Si ya se enviaron los resultados, no hacer nada más
+  if (resultsSent) {
+    return;
+  }
+
+  // Deshabilitar botón inmediatamente para evitar clics múltiples
+  resultsBtn.disabled = true;
+  resultsBtn.textContent = "Procesando...";
+
+  // Crear y mostrar mensaje temporal en verde
+  const loadingMsg = document.createElement("div");
+  loadingMsg.style.cssText = "font-size: 0.95rem; color: #166534; background: #ecfdf3; border: 1px solid #22c55e; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: center;";
+  loadingMsg.textContent = "Estás siendo dirigido a tus resultados...";
+  resultsPanel.parentNode.insertBefore(loadingMsg, resultsPanel);
+
+  const missing = [];
+  for (let i = 1; i <= 80; i++) {
+    if (!savedResponses[i] || savedResponses[i] === "") missing.push(i);
+  }
+  if (missing.length > 0) {
+    const missingBySection = {};
+    missing.forEach(i => {
+      const sec = itemToSection[i];
+      if (!missingBySection[sec.name]) missingBySection[sec.name] = [];
+      missingBySection[sec.name].push(i);
+    });
+    let msg = "<strong>Faltan por responder los siguientes ítems:</strong><br />";
+    Object.keys(missingBySection).forEach(secName => {
+      msg += `<strong>${secName}:</strong> ${missingBySection[secName].join(", ")}<br />`;
+    });
+    const currentSec = sections[currentSectionIndex];
+    const missingHere = missing.filter(i => currentSec.items.includes(i));
+    highlightMissingItems(missingHere);
+    missingMsg.innerHTML = msg;
+    missingMsg.style.display = "block";
+
+    // Restaurar botón si hay error
+    resultsBtn.disabled = false;
+    resultsBtn.textContent = "Ver resultados";
+    loadingMsg.remove(); // Quitar mensaje
+    return;
+  } else {
+    missingMsg.style.display = "none";
+    missingMsg.textContent = "";
+  }
+
+  const tbody = document.querySelector("#results-table tbody");
+  tbody.innerHTML = "";
+  let allValues = [];
+  const sectionResults = [];
+  sections.forEach(sec => {
+    const vals = sec.items.map(i => Number(savedResponses[i]));
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const level = levelFromAverage(avg);
+    allValues = allValues.concat(vals);
+    sectionResults.push({ name: sec.name, avg, level });
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${sec.name}</td><td>${avg.toFixed(2)}</td><td>${level}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  const globalAvg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
+  const globalLevel = levelFromAverage(globalAvg);
+
+  const globalDiv = document.getElementById("global-result");
+  const description = getGlobalDescription(globalAvg);
+  globalDiv.innerHTML = `
+    <strong>Promedio global:</strong> ${globalAvg.toFixed(2)}
+    <span class="global-level-tag">${globalLevel}</span>
+    <br /><br />
+    <strong>Interpretación:</strong> ${description}
+  `;
+
+  lastResults = {
+    respondentId,
+    timestamp: new Date().toLocaleString("es-MX", { timeZone: "America/Mazatlan" }),
+    sections: sectionResults,
+    globalAvg,
+    globalLevel,
+    sociodemo: { ...sociodemo }
+  };
+
+  // Enviar a Google Sheets SOLO una vez
+  await sendResponsesToSheet();
+
+  respondentIdSpan.textContent = respondentId;
+  idBox.style.display = "block";
+  pdfBtn.style.display = "inline-flex";
+
+  alert(
+    "Tus respuestas se han enviado.\n\n" +
+    "Tu ID de participante es: " + respondentId +
+    ". Te sugerimos guardarlo para fines académicos o personales."
+  );
+
+  // Marcar como enviado y ocultar el botón para evitar clics extra
+  resultsSent = true;
+  resultsBtn.style.display = "none";
+
+  // NUEVO: bloquear navegación y mostrar solo la pantalla final
+  surveyLocked = true;
+  if (navContainer) navContainer.style.display = "none";
+  presentationScreen.style.display = "none";
+  instructionsScreen.style.display = "none";
+  sociodemoScreen.style.display = "none";
+  currentSectionTitle.style.display = "none";
+  itemsContainer.style.display = "none";
+  actionsBar.style.display = "none";
+  resultsPanel.style.display = "block";
+  finalScreen.style.display = "block";
+
+  // Quitar mensaje de carga y restaurar botón (aunque ya está oculto)
+  loadingMsg.remove();
+  resultsBtn.disabled = false;
+  resultsBtn.textContent = "Ver resultados"; // Por si acaso
+});
+
+    /* =====================================
+       7. PDF DE RESULTADOS
+       ===================================== */
+    function generatePDF() {
+  if (!lastResults) {
+    alert("Primero responde el cuestionario y consulta tus resultados.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4"
+  });
+
+  // Configuración optimizada para una sola hoja
+  const marginLeft   = 18;
+  const marginRight  = 18;
+  const marginTop    = 20;
+  const marginBottom = 20;
+  const pageWidth    = doc.internal.pageSize.getWidth();
+  const pageHeight   = doc.internal.pageSize.getHeight();
+  const contentWidth = pageWidth - marginLeft - marginRight;
+
+  let y = marginTop;
+
+  // === ENCABEZADO ===
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14); // más pequeño
+  doc.setTextColor(0, 51, 102);
+  const title = "Escala de Autoevaluación del Nivel de Conocimiento en Habilidades de Investigación Científica (EAN-IN)";
+  const titleLines = doc.splitTextToSize(title, contentWidth);
+  doc.text(titleLines, pageWidth / 2, y, { align: "center" });
+  y += titleLines.length * 7 + 5;
+
+  doc.setLineWidth(0.7);
+  doc.setDrawColor(0, 51, 102);
+  doc.line(marginLeft, y, pageWidth - marginRight, y);
+  y += 8;
+
+  // === DATOS DEL PARTICIPANTE ===
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Datos del participante", marginLeft, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const datos = [
+    `ID de participante: ${lastResults.respondentId}`,
+    `Fecha y hora: ${lastResults.timestamp}`,
+    `Sexo: ${lastResults.sociodemo.sex}     Edad: ${lastResults.sociodemo.age} años`,
+    `Nivel educativo: ${lastResults.sociodemo.level}     Semestre: ${lastResults.sociodemo.semester}`
+  ];
+  datos.forEach(line => {
+    doc.text(line, marginLeft, y);
+    y += 5.5;
+  });
+  y += 8;
+
+  // === RESULTADOS POR DIMENSIÓN (tabla compacta) ===
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Resultados por dimensión", marginLeft, y);
+  y += 8;
+
+  const tableHeaders = ["Dimensión", "Promedio", "Nivel"];
+  const colWidths = [105, 30, 45]; // ligeramente más ancho para dimensión
+  const tableRowHeight = 8; // más compacto
+  const tableStartX = marginLeft;
+
+  // Cabecera
+  doc.setFillColor(230, 240, 255);
+  doc.rect(tableStartX, y, contentWidth, tableRowHeight, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.text(tableHeaders[0], tableStartX + 5, y + 6);
+  doc.text(tableHeaders[1], tableStartX + colWidths[0] + 5, y + 6);
+  doc.text(tableHeaders[2], tableStartX + colWidths[0] + colWidths[1] + 5, y + 6);
+  y += tableRowHeight;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+
+  lastResults.sections.forEach(sec => {
+    doc.setDrawColor(180);
+    doc.line(tableStartX, y, pageWidth - marginRight, y);
+
+    doc.text(sec.name, tableStartX + 5, y + 6);
+    doc.text(sec.avg.toFixed(2), tableStartX + colWidths[0] + 5, y + 6);
+    doc.text(sec.level, tableStartX + colWidths[0] + colWidths[1] + 5, y + 6);
+
+    y += tableRowHeight;
+  });
+
+  doc.line(tableStartX, y, pageWidth - marginRight, y);
+  y += 10;
+
+  // === RESULTADO GLOBAL ===
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Resultado Global", marginLeft, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const globalText = `Promedio global: ${lastResults.globalAvg.toFixed(2)} (${lastResults.globalLevel})`;
+  doc.text(globalText, marginLeft, y);
+  y += 8;
+
+  // === INTERPRETACIÓN ===
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.text("Interpretación del resultado:", marginLeft, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  const desc = getGlobalDescription(lastResults.globalAvg);
+  const descLines = doc.splitTextToSize(desc, contentWidth);
+
+  const lineHeight = 5.5; // interlineado más ajustado
+  descLines.forEach(line => {
+    doc.text(line, marginLeft, y);
+    y += lineHeight;
+  });
+
+  // === PIE DE PÁGINA ===
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80);
+  doc.text(`ID: ${lastResults.respondentId} • Generado el ${lastResults.timestamp} • Página 1`, pageWidth / 2, pageHeight - marginBottom + 5, { align: "center" });
+
+  // Guardar
+  doc.save(`Resultados_EAN-IN_${lastResults.respondentId}.pdf`);
+}
+    pdfBtn.addEventListener("click", generatePDF);
+
+    /* Botón "Volver a la página principal" */
+    if (goHomeBtn) {
+      goHomeBtn.addEventListener("click", () => {
+        window.location.reload();
+      });
+    }
+
+    /* =====================================
+       8. PDF DEL CONSENTIMIENTO INFORMADO
+       ===================================== */
+    function generateConsentPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      doc.setFontSize(14);
+      doc.text("Consentimiento informado EAN-IN", 10, y);
+      y += 8;
+      doc.setFontSize(10);
+      const lines = [
+        "El siguiente instrumento de autoevaluación es parte de una investigación educativa registrada ante la Secretaría",
+        "de Ciencia, Humanidades, Tecnología e Innovación (Folio IH-2025-I-407) por parte de la Universidad Pedagógica",
+        "del Estado de Sinaloa.",
+        "",
+        "El objetivo del cuestionario es contribuir a diagnosticar el nivel de conocimiento preliminar de los estudiantes sobre",
+        "diseños de investigación educativa y redacción científica. Su participación permitirá contribuir al proceso de calidad",
+        "en la formación universitaria y a la toma de decisiones académicas y científicas.",
+        "",
+        "No se ha detectado ningún riesgo que implique esta investigación; sin embargo, si no se siente cómodo proporcionando",
+        "alguna información, tiene la libertad de abandonar la investigación antes de finalizar la contestación del instrumento,",
+        "sin que esto le afecte en lo absoluto.",
+        "",
+        "La contestación de este instrumento es voluntaria y anónima; no se solicita su nombre. La información recolectada se",
+        "utilizará para la mejora de la calidad educativa universitaria y el desarrollo del proyecto de investigación, así como",
+        "para la diseminación de resultados en congresos, simposios, coloquios u otros medios de publicación o difusión.",
+        "",
+        "Lo único que se le pide es contestar con honestidad de acuerdo con sus conocimientos. Si está de acuerdo en continuar,",
+        "conteste las preguntas; de lo contrario, puede abandonar este proceso sin consecuencia académica o personal.",
+        "",
+        "Datos del proyecto:",
+        "Investigador responsable: Dr. Kristian Armando Pineda Castillo",
+        "Título del proyecto: Uso de material multimedia en formato de video para potenciar el aprendizaje científico",
+        "universitario: el aprendizaje de la investigación educativa y la redacción científica.",
+        "Folio: IH-2025-I-407",
+        "Objetivo general: Describir la forma en que el uso de material multimedia en formato de video impacta en el proceso de",
+        "aprendizaje de la investigación educativa y la redacción científica en el contexto universitario de la UPES.",
+        "Contacto: kristian.pineda@upes.edu.mx",
+        "",
+        "He leído y comprendido la información anterior. Acepto participar voluntariamente en este estudio, entendiendo que mi",
+        "participación es confidencial y puedo retirarme en cualquier momento sin consecuencias."
+      ];
+      lines.forEach(line => {
+        const split = doc.splitTextToSize(line, 190);
+        split.forEach(str => {
+          if (y > 280) { doc.addPage(); y = 10; }
+          doc.text(str, 10, y);
+          y += 5;
+        });
+      });
+      doc.save("Consentimiento_EANIN.pdf");
+    }
+    if (downloadConsentBtn) {
+      downloadConsentBtn.addEventListener("click", generateConsentPDF);
+    }
+
+    // Vista inicial
+    onPresentationTabClick();
+  </script>
+</body>
+</html>
